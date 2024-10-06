@@ -266,9 +266,24 @@
             ctx.clip();
 
             if (guestImage) {
-                const imgWidth = guestImage.width * scale;
-                const imgHeight = guestImage.height * scale;
-                ctx.drawImage(guestImage, offsetX, offsetY, imgWidth, imgHeight);
+                const imgAspect = guestImage.width / guestImage.height;
+                const canvasAspect = canvas.width / canvas.height;
+
+                let drawWidth, drawHeight;
+
+                if (imgAspect > canvasAspect) {
+                    // Image is wider than canvas
+                    drawHeight = canvas.height;
+                    drawWidth = guestImage.width * (canvas.height / guestImage.height);
+                    offsetX = (canvas.width - drawWidth) / 2;
+                } else {
+                    // Image is taller than canvas
+                    drawWidth = canvas.width;
+                    drawHeight = guestImage.height * (canvas.width / guestImage.width);
+                    offsetY = (canvas.height - drawHeight) / 2;
+                }
+
+                ctx.drawImage(guestImage, offsetX, offsetY, drawWidth, drawHeight);
             }
 
             ctx.restore();
