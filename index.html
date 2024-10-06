@@ -147,7 +147,7 @@
         let offsetX = 0;        // Initial horizontal offset
         let offsetY = 0;        // Initial vertical offset
         let isDragging = false; // Track whether the user is dragging
-        let lastX = 0, lastY = 0; // Track touch position for dragging
+        let lastX = 0, lastY = 0; // Track touch/mouse position for dragging
         let pinchDistanceStart = 0; // Store the initial pinch distance
         let initialScale = 1; // Scale before pinch
 
@@ -257,6 +257,57 @@
         canvas.addEventListener('touchend', () => {
             isDragging = false;
             canvas.style.cursor = 'grab';
+        });
+
+        // Handle desktop mouse events for dragging and zooming
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            canvas.style.cursor = 'grabbing';
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging && guestImage) {
+                const deltaX = e.clientX - lastX;
+                const deltaY = e.clientY - lastY;
+
+                offsetX += deltaX;
+                offsetY += deltaY;
+
+                lastX = e.clientX;
+                lastY = e.clientY;
+
+                drawCanvas();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+
+        // Handle zoom with mouse wheel (desktop)
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomAmount = e.deltaY * -0.01;  // Control the zoom sensitivity
+
+            const newScale = scale + zoomAmount;
+
+            // Limit zoom levels between 0.5 and 3
+            if (newScale > 0.5 && newScale < 3) {
+                // Adjust the offset to zoom in/out towards the mouse pointer
+                const mouseX = e.clientX - canvas.offsetLeft;
+                const mouseY = e.clientY - canvas.offsetTop;
+                offsetX -= (mouseX - offsetX) * zoomAmount;
+                offsetY -= (mouseY - offsetY) * zoomAmount;
+                scale = newScale;
+                drawCanvas();
+            }
         });
 
         // Calculate the distance between two touch points for pinch-zoom
