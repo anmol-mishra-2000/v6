@@ -82,10 +82,9 @@
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 20px; /* Add space above the download button */
             transition: background-color 0.3s ease;
-            position: sticky;
-            bottom: 10px;
+            position: relative;
         }
 
         #downloadBtn:hover {
@@ -100,7 +99,7 @@
         input[type="range"] {
             width: 100%;
             max-width: 400px;
-            margin: 12px;
+            margin: 12px 0; /* Add margin to space out the sliders */
             -webkit-appearance: none;
             appearance: none;
             height: 8px;
@@ -208,7 +207,7 @@
         </div>
         
         <!-- Zoom and Move Sliders -->
-        <div id="sliders" style="display: none;">
+        <div id="sliders" style="display: block;">
             <div>
                 <label for="zoomSlider">Zoom</label>
                 <input type="range" id="zoomSlider" min="1" max="2" step="0.05" value="1">
@@ -250,7 +249,7 @@
         frameImage.src = 'frame.png';  // Path to your frame
         
         let guestImage = null; // To store the uploaded or captured image
-        let scale = 1; // Original scale
+        let scale = 1;
         let offsetX = 0;
         let offsetY = 0;
 
