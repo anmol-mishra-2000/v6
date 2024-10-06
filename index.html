@@ -246,9 +246,13 @@
 
                 const newScale = initialScale * zoomAmount;
 
+                // Increase the zoom speed by applying an additional multiplier
+                const zoomSpeed = 1.5;  // Increase this value to speed up zoom
+                const fasterScale = initialScale + (zoomAmount - 1) * zoomSpeed;
+
                 // Limit zoom levels between 0.5 and 3
-                if (newScale > 0.5 && newScale < 3) {
-                    scale = newScale;
+                if (fasterScale > 0.5 && fasterScale < 3) {
+                    scale = fasterScale;
                     drawCanvas();
                 }
             }
@@ -294,7 +298,7 @@
         // Handle zoom with mouse wheel (desktop)
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const zoomAmount = e.deltaY * -0.01;  // Control the zoom sensitivity
+            const zoomAmount = e.deltaY * -0.05;  // Speed up zooming by adjusting this value
 
             const newScale = scale + zoomAmount;
 
