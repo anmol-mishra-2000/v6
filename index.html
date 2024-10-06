@@ -12,7 +12,7 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background: #00008B; /* Dark Blue background */
+            background: #00008B;
             margin: 0;
             padding: 0 10px;
             display: flex;
@@ -21,7 +21,6 @@
             justify-content: flex-start;
             height: 100vh;
             overflow-y: auto;
-            scroll-behavior: smooth;
         }
 
         .container {
@@ -34,7 +33,8 @@
             box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.1);
             margin: 20px 0;
             border: 1px solid #ddd;
-            overflow-x: hidden; /* Prevent cutting */
+            overflow-x: hidden;
+            position: relative;
         }
 
         .buttons {
@@ -70,7 +70,7 @@
             border-radius: 10px;
             margin: 0 auto;
             display: block;
-            width: 100%; /* Adjust to container */
+            width: 100%;
             height: auto;
         }
 
@@ -84,6 +84,8 @@
             cursor: pointer;
             margin-top: 20px;
             transition: background-color 0.3s ease;
+            position: sticky;
+            bottom: 10px;
         }
 
         #downloadBtn:hover {
@@ -206,19 +208,21 @@
         </div>
         
         <!-- Zoom and Move Sliders -->
-        <div>
-            <label for="zoomSlider">Zoom</label>
-            <input type="range" id="zoomSlider" min="1" max="2" step="0.05" value="1">
-        </div>
+        <div id="sliders" style="display: none;">
+            <div>
+                <label for="zoomSlider">Zoom</label>
+                <input type="range" id="zoomSlider" min="1" max="2" step="0.05" value="1">
+            </div>
 
-        <div>
-            <label for="moveHorizontalSlider">Move Left/Right</label>
-            <input type="range" id="moveHorizontalSlider" min="-100" max="100" step="1" value="0">
-        </div>
+            <div>
+                <label for="moveHorizontalSlider">Move Left/Right</label>
+                <input type="range" id="moveHorizontalSlider" min="-100" max="100" step="1" value="0">
+            </div>
 
-        <div>
-            <label for="moveVerticalSlider">Move Up/Down</label>
-            <input type="range" id="moveVerticalSlider" min="-100" max="100" step="1" value="0">
+            <div>
+                <label for="moveVerticalSlider">Move Up/Down</label>
+                <input type="range" id="moveVerticalSlider" min="-100" max="100" step="1" value="0">
+            </div>
         </div>
 
         <button id="downloadBtn" disabled>Download Photo</button>
@@ -233,6 +237,7 @@
         const canvas = document.getElementById('photoCanvas');
         const ctx = canvas.getContext('2d');
         const downloadBtn = document.getElementById('downloadBtn');
+        const sliders = document.getElementById('sliders');
         const video = document.getElementById('video');
         const captureBtn = document.getElementById('captureBtn');
         
@@ -281,13 +286,30 @@
             reader.onload = (event) => {
                 guestImage = new Image();
                 guestImage.onload = () => {
+                    resizeImage(); // Resize or crop the image
                     drawCanvas();
+                    sliders.style.display = 'block'; // Show zoom/move sliders
                     downloadBtn.disabled = false;
                 };
                 guestImage.src = event.target.result;
             };
             reader.readAsDataURL(e.target.files[0]);
         });
+
+        // Function to resize or crop the uploaded image
+        function resizeImage() {
+            const canvasAspect = canvas.width / canvas.height;
+            const imageAspect = guestImage.width / guestImage.height;
+
+            if (imageAspect > canvasAspect) {
+                scale = canvas.width / guestImage.width;  // Fit the width
+            } else {
+                scale = canvas.height / guestImage.height;  // Fit the height
+            }
+
+            offsetX = (canvas.width - guestImage.width * scale) / 2;
+            offsetY = (canvas.height - guestImage.height * scale) / 2;
+        }
 
         // Capture Photo from Camera
         captureBtn.addEventListener('click', async () => {
@@ -306,7 +328,9 @@
 
                     guestImage = new Image();
                     guestImage.onload = () => {
+                        resizeImage(); // Resize or crop the captured image
                         drawCanvas();
+                        sliders.style.display = 'block'; // Show zoom/move sliders
                         downloadBtn.disabled = false;
                     };
                     guestImage.src = tempCanvas.toDataURL('image/png');
