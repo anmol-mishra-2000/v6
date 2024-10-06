@@ -215,12 +215,12 @@
 
             <div>
                 <label for="moveHorizontalSlider">Move Left/Right</label>
-                <input type="range" id="moveHorizontalSlider" min="-100" max="100" step="1" value="0">
+                <input type="range" id="moveHorizontalSlider" min="-200" max="200" step="1" value="0">
             </div>
 
             <div>
                 <label for="moveVerticalSlider">Move Up/Down</label>
-                <input type="range" id="moveVerticalSlider" min="-100" max="100" step="1" value="0">
+                <input type="range" id="moveVerticalSlider" min="-200" max="200" step="1" value="0">
             </div>
         </div>
 
@@ -266,24 +266,9 @@
             ctx.clip();
 
             if (guestImage) {
-                const imgAspect = guestImage.width / guestImage.height;
-                const canvasAspect = canvas.width / canvas.height;
-
-                let drawWidth, drawHeight;
-
-                if (imgAspect > canvasAspect) {
-                    // Image is wider than canvas
-                    drawHeight = canvas.height;
-                    drawWidth = guestImage.width * (canvas.height / guestImage.height);
-                    offsetX = (canvas.width - drawWidth) / 2;
-                } else {
-                    // Image is taller than canvas
-                    drawWidth = canvas.width;
-                    drawHeight = guestImage.height * (canvas.width / guestImage.width);
-                    offsetY = (canvas.height - drawHeight) / 2;
-                }
-
-                ctx.drawImage(guestImage, offsetX, offsetY, drawWidth, drawHeight);
+                const imgWidth = guestImage.width * scale;
+                const imgHeight = guestImage.height * scale;
+                ctx.drawImage(guestImage, offsetX, offsetY, imgWidth, imgHeight);
             }
 
             ctx.restore();
@@ -323,30 +308,23 @@
 
         // Zoom functionality
         zoomSlider.addEventListener('input', (e) => {
-            const newScale = parseFloat(e.target.value);  // Get new scale from slider
-            const diffScale = newScale / scale;  // Calculate difference in scale
-
-            // Adjust offsets to zoom in and out at the center
-            offsetX = (canvas.width / 2) - (canvas.width / 2 - offsetX) * diffScale;
-            offsetY = (canvas.height / 2) - (canvas.height / 2 - offsetY) * diffScale;
-
-            scale = newScale;  // Update the scale
-            drawCanvas();  // Redraw with new scale and offsets
+            scale = parseFloat(e.target.value);  // Adjust the scale based on slider value
+            drawCanvas();  // Redraw the canvas with the updated zoom
         });
 
-        // Handle horizontal movement
+        // Horizontal movement slider handling
         moveHorizontalSlider.addEventListener('input', (e) => {
             offsetX = parseFloat(e.target.value);  // Adjust offsetX from slider
             drawCanvas();  // Redraw with new horizontal offset
         });
 
-        // Handle vertical movement
+        // Vertical movement slider handling
         moveVerticalSlider.addEventListener('input', (e) => {
             offsetY = parseFloat(e.target.value);  // Adjust offsetY from slider
             drawCanvas();  // Redraw with new vertical offset
         });
 
-        // Handle image download
+        // Download functionality
         downloadBtn.addEventListener('click', () => {
             const link = document.createElement('a');
             link.download = 'Your DP for Sanjay.png';
