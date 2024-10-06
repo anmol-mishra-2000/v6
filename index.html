@@ -72,7 +72,8 @@
             display: block;
             width: 100%;
             height: auto;
-            cursor: grab; /* Show the move cursor */
+            touch-action: none; /* Prevent default zoom/pan in the browser */
+            cursor: grab;
         }
 
         #downloadBtn {
@@ -111,53 +112,6 @@
             color: yellow;
             font-weight: bold;
         }
-
-        /* Mobile adjustments */
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-                width: 95%;
-            }
-
-            #downloadBtn {
-                padding: 12px 20px;
-                font-size: 16px;
-            }
-
-            .buttons button, .buttons input[type="file"] {
-                padding: 10px 16px;
-                font-size: 14px;
-            }
-
-            canvas {
-                width: 100%;
-            }
-
-            footer {
-                font-size: 1rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 10px;
-                width: 100%;
-            }
-
-            #downloadBtn {
-                padding: 10px 18px;
-                font-size: 14px;
-            }
-
-            .buttons button, .buttons input[type="file"] {
-                padding: 8px 14px;
-                font-size: 12px;
-            }
-
-            footer {
-                font-size: 0.9rem;
-            }
-        }
     </style>
 </head>
 <body>
@@ -193,7 +147,9 @@
         let offsetX = 0;        // Initial horizontal offset
         let offsetY = 0;        // Initial vertical offset
         let isDragging = false; // Track whether the user is dragging
-        let lastX = 0, lastY = 0; // Track mouse position for dragging
+        let lastX = 0, lastY = 0; // Track touch position for dragging
+        let pinchDistanceStart = 0; // Store the initial pinch distance
+        let initialScale = 1; // Scale before pinch
 
         // Load frame image and set canvas size
         frameImage.onload = () => {
@@ -252,56 +208,63 @@
             offsetY = (canvas.height - guestImage.height * scale) / 2;
         }
 
-        // Handle dragging the image
-        canvas.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            lastX = e.clientX;
-            lastY = e.clientY;
-            canvas.style.cursor = 'grabbing';
+        // Handle dragging the image on touch devices
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                // Single touch for dragging
+                isDragging = true;
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
+                canvas.style.cursor = 'grabbing';
+            } else if (e.touches.length === 2) {
+                // Two fingers for pinch-to-zoom
+                isDragging = false; // Disable dragging during pinch
+                pinchDistanceStart = getPinchDistance(e.touches);
+                initialScale = scale;
+            }
         });
 
-        canvas.addEventListener('mousemove', (e) => {
-            if (isDragging && guestImage) {
-                const deltaX = e.clientX - lastX;
-                const deltaY = e.clientY - lastY;
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevent scrolling
+
+            if (e.touches.length === 1 && isDragging && guestImage) {
+                // Handle drag
+                const deltaX = e.touches[0].clientX - lastX;
+                const deltaY = e.touches[0].clientY - lastY;
 
                 offsetX += deltaX;
                 offsetY += deltaY;
 
-                lastX = e.clientX;
-                lastY = e.clientY;
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
 
                 drawCanvas();
+            } else if (e.touches.length === 2) {
+                // Handle pinch-to-zoom
+                const currentPinchDistance = getPinchDistance(e.touches);
+                const zoomAmount = currentPinchDistance / pinchDistanceStart;
+
+                const newScale = initialScale * zoomAmount;
+
+                // Limit zoom levels between 0.5 and 3
+                if (newScale > 0.5 && newScale < 3) {
+                    scale = newScale;
+                    drawCanvas();
+                }
             }
         });
 
-        canvas.addEventListener('mouseup', () => {
+        canvas.addEventListener('touchend', () => {
             isDragging = false;
             canvas.style.cursor = 'grab';
         });
 
-        canvas.addEventListener('mouseleave', () => {
-            isDragging = false;
-            canvas.style.cursor = 'grab';
-        });
-
-        // Handle zoom with mouse wheel or touchpad
-        canvas.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const zoomAmount = e.deltaY * -0.001;  // Zoom in or out based on the wheel scroll
-            const newScale = scale + zoomAmount;
-
-            // Limit zoom levels between 0.5 and 3
-            if (newScale > 0.5 && newScale < 3) {
-                // Adjust the offset to zoom in/out towards the mouse pointer
-                const mouseX = e.clientX - canvas.offsetLeft;
-                const mouseY = e.clientY - canvas.offsetTop;
-                offsetX -= (mouseX - offsetX) * zoomAmount;
-                offsetY -= (mouseY - offsetY) * zoomAmount;
-                scale = newScale;
-                drawCanvas();
-            }
-        });
+        // Calculate the distance between two touch points for pinch-zoom
+        function getPinchDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
 
         // Download functionality
         downloadBtn.addEventListener('click', () => {
