@@ -250,7 +250,7 @@
         frameImage.src = 'frame.png';  // Path to your frame
         
         let guestImage = null; // To store the uploaded or captured image
-        let scale = 1;
+        let scale = 1; // Original scale
         let offsetX = 0;
         let offsetY = 0;
 
@@ -311,56 +311,22 @@
             offsetY = (canvas.height - guestImage.height * scale) / 2;
         }
 
-        // Capture Photo from Camera
-        captureBtn.addEventListener('click', async () => {
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-                video.style.display = 'block';
-                captureBtn.textContent = 'Take Photo';
-
-                captureBtn.onclick = () => {
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = video.videoWidth;
-                    tempCanvas.height = video.videoHeight;
-                    const tempCtx = tempCanvas.getContext('2d');
-                    tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
-
-                    guestImage = new Image();
-                    guestImage.onload = () => {
-                        resizeImage(); // Resize or crop the captured image
-                        drawCanvas();
-                        sliders.style.display = 'block'; // Show zoom/move sliders
-                        downloadBtn.disabled = false;
-                    };
-                    guestImage.src = tempCanvas.toDataURL('image/png');
-
-                    const tracks = video.srcObject.getTracks();
-                    tracks.forEach(track => track.stop());
-                    video.style.display = 'none';
-                    captureBtn.textContent = 'Capture Photo with Camera';
-                };
-            } else {
-                alert("Camera access is not available");
-            }
-        });
-
-        // Update canvas when zoom slider changes
+        // Zoom slider handling
         zoomSlider.addEventListener('input', (e) => {
-            scale = parseFloat(e.target.value);  // Set the scale from slider
-            drawCanvas();  // Redraw the canvas with new zoom
+            scale = parseFloat(e.target.value); // Adjust the scale based on slider value
+            drawCanvas(); // Redraw the canvas with the updated zoom
         });
 
-        // Update canvas when horizontal move slider changes
+        // Horizontal movement slider handling
         moveHorizontalSlider.addEventListener('input', (e) => {
-            offsetX = parseFloat(e.target.value);  // Set the offsetX from slider
-            drawCanvas();  // Redraw the canvas with new horizontal position
+            offsetX = parseFloat(e.target.value); // Update the horizontal offset
+            drawCanvas(); // Redraw the canvas with the updated position
         });
 
-        // Update canvas when vertical move slider changes
+        // Vertical movement slider handling
         moveVerticalSlider.addEventListener('input', (e) => {
-            offsetY = parseFloat(e.target.value);  // Set the offsetY from slider
-            drawCanvas();  // Redraw the canvas with new vertical position
+            offsetY = parseFloat(e.target.value); // Update the vertical offset
+            drawCanvas(); // Redraw the canvas with the updated position
         });
 
         // Download functionality
@@ -370,6 +336,7 @@
             link.href = canvas.toDataURL('image/png');
             link.click();
         });
+
     </script>
 </body>
 </html>
