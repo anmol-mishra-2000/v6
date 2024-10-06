@@ -82,7 +82,7 @@
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            margin-top: 20px; /* Add space above the download button */
+            margin-top: 20px;
             transition: background-color 0.3s ease;
             position: relative;
         }
@@ -99,7 +99,7 @@
         input[type="range"] {
             width: 100%;
             max-width: 400px;
-            margin: 12px 0; /* Add margin to space out the sliders */
+            margin: 12px 0;
             -webkit-appearance: none;
             appearance: none;
             height: 8px;
@@ -207,10 +207,10 @@
         </div>
         
         <!-- Zoom and Move Sliders -->
-        <div id="sliders" style="display: block;">
+        <div id="sliders" style="display: none;">
             <div>
                 <label for="zoomSlider">Zoom</label>
-                <input type="range" id="zoomSlider" min="1" max="2" step="0.05" value="1">
+                <input type="range" id="zoomSlider" min="1" max="2" step="0.01" value="1">
             </div>
 
             <div>
@@ -237,30 +237,26 @@
         const ctx = canvas.getContext('2d');
         const downloadBtn = document.getElementById('downloadBtn');
         const sliders = document.getElementById('sliders');
-        const video = document.getElementById('video');
-        const captureBtn = document.getElementById('captureBtn');
-        
-        // Sliders
         const zoomSlider = document.getElementById('zoomSlider');
         const moveHorizontalSlider = document.getElementById('moveHorizontalSlider');
         const moveVerticalSlider = document.getElementById('moveVerticalSlider');
 
         let frameImage = new Image();
         frameImage.src = 'frame.png';  // Path to your frame
-        
-        let guestImage = null; // To store the uploaded or captured image
-        let scale = 1;
-        let offsetX = 0;
-        let offsetY = 0;
 
-        // Load the frame image
+        let guestImage = null;  // Store the uploaded or captured image
+        let scale = 1;          // Initial scale
+        let offsetX = 0;        // Initial horizontal offset
+        let offsetY = 0;        // Initial vertical offset
+
+        // Load frame image and set canvas size
         frameImage.onload = () => {
-            canvas.width = frameImage.width * 2; // 2x for better quality
+            canvas.width = frameImage.width * 2;  // 2x for better quality
             canvas.height = frameImage.height * 2;
-            drawCanvas(); // Draw the frame initially
+            drawCanvas();  // Draw the initial frame
         };
 
-        // Function to draw the frame and guest image
+        // Draw the canvas (frame + guest image)
         function drawCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.save();
@@ -279,23 +275,23 @@
             ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
         }
 
-        // Handle file upload
+        // Handle image upload
         uploadPhoto.addEventListener('change', (e) => {
             const reader = new FileReader();
             reader.onload = (event) => {
                 guestImage = new Image();
                 guestImage.onload = () => {
-                    resizeImage(); // Resize or crop the image
-                    drawCanvas();
-                    sliders.style.display = 'block'; // Show zoom/move sliders
-                    downloadBtn.disabled = false;
+                    resizeImage();  // Resize and fit image
+                    drawCanvas();   // Draw it on the canvas
+                    sliders.style.display = 'block';  // Show sliders after image is loaded
+                    downloadBtn.disabled = false;     // Enable download button
                 };
                 guestImage.src = event.target.result;
             };
             reader.readAsDataURL(e.target.files[0]);
         });
 
-        // Function to resize or crop the uploaded image
+        // Resize the uploaded image to fit the canvas
         function resizeImage() {
             const canvasAspect = canvas.width / canvas.height;
             const imageAspect = guestImage.width / guestImage.height;
@@ -310,25 +306,32 @@
             offsetY = (canvas.height - guestImage.height * scale) / 2;
         }
 
-        // Zoom slider handling
+        // Zoom functionality
         zoomSlider.addEventListener('input', (e) => {
-            scale = parseFloat(e.target.value); // Adjust the scale based on slider value
-            drawCanvas(); // Redraw the canvas with the updated zoom
+            const newScale = parseFloat(e.target.value);  // Get new scale from slider
+            const diffScale = newScale / scale;  // Calculate difference in scale
+
+            // Adjust offsets to zoom in and out at the center
+            offsetX = (canvas.width / 2) - (canvas.width / 2 - offsetX) * diffScale;
+            offsetY = (canvas.height / 2) - (canvas.height / 2 - offsetY) * diffScale;
+
+            scale = newScale;  // Update the scale
+            drawCanvas();  // Redraw with new scale and offsets
         });
 
-        // Horizontal movement slider handling
+        // Handle horizontal movement
         moveHorizontalSlider.addEventListener('input', (e) => {
-            offsetX = parseFloat(e.target.value); // Update the horizontal offset
-            drawCanvas(); // Redraw the canvas with the updated position
+            offsetX = parseFloat(e.target.value);  // Adjust offsetX from slider
+            drawCanvas();  // Redraw with new horizontal offset
         });
 
-        // Vertical movement slider handling
+        // Handle vertical movement
         moveVerticalSlider.addEventListener('input', (e) => {
-            offsetY = parseFloat(e.target.value); // Update the vertical offset
-            drawCanvas(); // Redraw the canvas with the updated position
+            offsetY = parseFloat(e.target.value);  // Adjust offsetY from slider
+            drawCanvas();  // Redraw with new vertical offset
         });
 
-        // Download functionality
+        // Handle image download
         downloadBtn.addEventListener('click', () => {
             const link = document.createElement('a');
             link.download = 'Your DP for Sanjay.png';
